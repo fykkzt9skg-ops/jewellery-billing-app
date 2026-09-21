@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,192 +7,279 @@
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;margin:0;background:#f4f4f4;color:#222}
-header{background:#292929;color:white;padding:18px;text-align:center}
-main{max-width:850px;margin:auto;padding:16px}
-.card{background:white;padding:16px;margin:14px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
-h2{font-size:18px;margin-top:0}
-input,select,button{font:inherit;padding:10px;border:1px solid #ccc;border-radius:7px}
-input,select{width:100%;margin:5px 0 12px}
-button{background:#292929;color:white;border:0;margin:4px 2px;cursor:pointer}
+header{background:#252525;color:white;padding:16px;text-align:center}
+main{max-width:900px;margin:auto;padding:14px}
+.card{background:white;padding:16px;margin:12px 0;border-radius:10px;box-shadow:0 1px 5px #ccc}
+h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:14px;margin-top:10px}
+input,select,textarea,button{font:inherit;padding:10px;border:1px solid #bbb;border-radius:6px;width:100%;margin-top:5px}
+button{background:#292929;color:white;border:0;cursor:pointer;margin-top:10px}
 button.secondary{background:#666}
-button.danger{background:#a33}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.item{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0}
-.total{font-size:20px;font-weight:bold}
-.bill{background:white;padding:20px;border:1px solid #ddd}
+button.danger{background:#a22}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.item{border:1px solid #ddd;padding:12px;border-radius:8px;margin:10px 0}
+.total{font-size:20px;font-weight:bold;text-align:right;margin-top:12px}
+.bill{background:white;padding:20px;border:1px solid #ccc}
 .bill h2{text-align:center}
-table{width:100%;border-collapse:collapse;margin:12px 0}
+table{width:100%;border-collapse:collapse;margin-top:12px}
 th,td{border:1px solid #bbb;padding:7px;text-align:left;font-size:13px}
 .right{text-align:right}
+.saved button{margin:4px 0}
 @media(max-width:500px){.grid{grid-template-columns:1fr}}
 @media print{
  body{background:white}
- header,main>*:not(#invoice),#invoice button{display:none!important}
- #invoice{display:block!important;border:0;box-shadow:none;padding:0}
+ header,main>.no-print,.no-print{display:none!important}
+ main{padding:0;margin:0;max-width:none}
+ .card{box-shadow:none;border:0;margin:0;padding:0}
+ #printArea{display:block!important}
 }
 </style>
 </head>
 <body>
 <header>
-<h1>Jewellery Billing</h1>
-<div>Gold & Silver Invoice</div>
+  <h1>Jewellery Billing App</h1>
+  <div>Personal Offline Billing</div>
 </header>
 
 <main>
-<section class="card">
-<h2>Shop Details</h2>
-<input id="shop" placeholder="Shop name">
-<input id="address" placeholder="Shop address">
-<input id="phone" placeholder="Phone number">
-<input id="gstin" placeholder="GSTIN (optional)">
-</section>
-
-<section class="card">
-<h2>Customer Details</h2>
-<input id="customer" placeholder="Customer name">
-<input id="billdate" type="date">
-</section>
-
-<section class="card">
-<h2>Items</h2>
-<div id="items"></div>
-<button onclick="addItem()">+ Add Item</button>
-</section>
-
-<section class="card">
-<h2>Bill Summary</h2>
-<div class="grid">
-<label>Discount (₹)<input id="discount" type="number" value="0" oninput="calculate()"></label>
-<label>GST % (optional)<input id="gst" type="number" placeholder="0" oninput="calculate()"></label>
+<div class="card no-print">
+  <h2>Shop Details</h2>
+  <label>Shop name</label><input id="shopName" placeholder="Your Jewellery Shop">
+  <label>Address</label><input id="shopAddress" placeholder="Shop address">
+  <label>Phone</label><input id="shopPhone" placeholder="Phone number">
+  <label>GSTIN (optional)</label><input id="shopGstin" placeholder="GSTIN">
+  <button onclick="saveShop()">Save Shop Details</button>
 </div>
-<p>Subtotal: ₹<span id="subtotal">0.00</span></p>
-<p>GST: ₹<span id="gstamount">0.00</span></p>
-<p class="total">Grand Total: ₹<span id="grand">0.00</span></p>
-<button onclick="makeInvoice()">Preview Invoice</button>
-<button class="secondary" onclick="saveBill()">Save Bill</button>
-<button class="secondary" onclick="showBills()">Search Saved Bills</button>
-</section>
 
-<section class="card" id="saved" style="display:none">
-<h2>Saved Bills</h2>
-<input id="search" placeholder="Search by customer or bill number" oninput="showBills()">
-<div id="billlist"></div>
-</section>
+<div class="card no-print">
+  <h2>Customer Details</h2>
+  <label>Customer name</label><input id="customer" placeholder="Customer name">
+  <label>Phone (optional)</label><input id="phone" placeholder="Phone number">
+  <label>Bill number</label><input id="billNo">
+  <label>Bill date</label><input id="billDate" type="date">
+</div>
 
-<section class="card" id="invoice" style="display:none">
-<div class="bill" id="printarea"></div>
-<button onclick="window.print()">Print / Save PDF</button>
-</section>
+<div class="card no-print">
+  <h2>Add Jewellery Item</h2>
+  <div class="grid">
+    <div><label>Metal</label>
+      <select id="metal"><option>Gold</option><option>Silver</option></select>
+    </div>
+    <div><label>Item name</label><input id="itemName" placeholder="Ring, chain, etc."></div>
+    <div><label>Quantity</label><input id="qty" type="number" min="0" step="any" value="1"></div>
+    <div><label>Weight (grams)</label><input id="weight" type="number" min="0" step="any" value="0"></div>
+    <div><label>Rate per gram (₹)</label><input id="rate" type="number" min="0" step="any" value="0"></div>
+    <div><label>Wastage (%)</label><input id="wastage" type="number" min="0" step="any" value="0"></div>
+    <div><label>Making charges (₹)</label><input id="making" type="number" min="0" step="any" value="0"></div>
+    <div><label>Discount (₹)</label><input id="discount" type="number" min="0" step="any" value="0"></div>
+  </div>
+  <button onclick="addItem()">Add Item</button>
+  <div id="itemList"></div>
+</div>
+
+<div class="card no-print">
+  <h2>Bill Total</h2>
+  <div class="grid">
+    <div><label>GST (%) — optional</label><input id="gstRate" type="number" min="0" step="any" value="0" oninput="renderItems()"></div>
+  </div>
+  <div id="totalBox" class="total">Total: ₹0.00</div>
+  <label>Owner's signature / name</label><input id="signature" placeholder="Owner's signature">
+  <button onclick="previewBill()">Preview Bill</button>
+  <button onclick="saveBill()">Save Bill</button>
+  <button onclick="printBill()">Print / Save as PDF</button>
+  <button class="secondary" onclick="newBill()">New Bill</button>
+</div>
+
+<div class="card no-print">
+  <h2>Search Saved Bills</h2>
+  <input id="search" placeholder="Search by customer or bill number" oninput="showSaved()">
+  <div id="savedBills" class="saved"></div>
+</div>
+
+<div class="card" id="printArea">
+  <div id="billPreview">Your bill preview will appear here.</div>
+</div>
 </main>
 
 <script>
-let items=[];
-let bills=JSON.parse(localStorage.getItem("jewelleryBills")||"[]");
-let billNo=1;
+const $ = id => document.getElementById(id);
+let items = [];
+let editingId = null;
 
-document.getElementById("billdate").value=
-new Date().toISOString().slice(0,10);
-
+function today(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function money(n){return "₹" + Number(n||0).toFixed(2)}
+function safe(s){
+  return String(s ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function num(id){return Math.max(0,Number($(id).value)||0)}
+function loadShop(){
+  const s=JSON.parse(localStorage.getItem("jewelShop")||"{}");
+  $("shopName").value=s.name||"";
+  $("shopAddress").value=s.address||"";
+  $("shopPhone").value=s.phone||"";
+  $("shopGstin").value=s.gstin||"";
+}
+function saveShop(){
+  localStorage.setItem("jewelShop",JSON.stringify({
+    name:$("shopName").value,address:$("shopAddress").value,
+    phone:$("shopPhone").value,gstin:$("shopGstin").value
+  }));
+  alert("Shop details saved on this device.");
+}
+function makeBillNo(){
+  return "JB-"+Date.now().toString().slice(-8);
+}
 function addItem(){
- items.push({metal:"Gold",name:"",qty:1,weight:0,rate:0,wastage:0,making:0});
- renderItems();
+  const name=$("itemName").value.trim();
+  if(!name){alert("Please enter the item name.");return}
+  items.push({
+    metal:$("metal").value,name,qty:num("qty"),weight:num("weight"),
+    rate:num("rate"),wastage:num("wastage"),making:num("making"),
+    discount:num("discount")
+  });
+  $("itemName").value="";
+  $("qty").value=1;$("weight").value=0;$("rate").value=0;
+  $("wastage").value=0;$("making").value=0;$("discount").value=0;
+  renderItems();
 }
-function renderItems(){
- const box=document.getElementById("items");
- box.innerHTML="";
- items.forEach((it,i)=>{
-  box.innerHTML+=`
-  <div class="item">
-  <b>Item ${i+1}</b>
-  <button class="danger" onclick="removeItem(${i})">Remove</button>
-  <label>Metal<select onchange="set(${i},'metal',this.value)">
-  <option ${it.metal==="Gold"?"selected":""}>Gold</option>
-  <option ${it.metal==="Silver"?"selected":""}>Silver</option>
-  </select></label>
-  <label>Item name<input value="${it.name}" placeholder="Ring, chain, etc." onchange="set(${i},'name',this.value)"></label>
-  <div class="grid">
-  <label>Quantity<input type="number" min="1" value="${it.qty}" onchange="set(${i},'qty',this.value)"></label>
-  <label>Weight (g)<input type="number" min="0" step="0.001" value="${it.weight}" onchange="set(${i},'weight',this.value)"></label>
-  <label>Rate per gram (₹)<input type="number" min="0" value="${it.rate}" onchange="set(${i},'rate',this.value)"></label>
-  <label>Wastage %<input type="number" min="0" value="${it.wastage}" onchange="set(${i},'wastage',this.value)"></label>
-  <label>Making charges (₹)<input type="number" min="0" value="${it.making}" onchange="set(${i},'making',this.value)"></label>
-  </div>
-  <p>Item total: ₹${itemTotal(it).toFixed(2)}</p>
-  </div>`;
- });
- calculate();
+function itemAmount(it){
+  const base=it.weight*it.rate;
+  const waste=base*it.wastage/100;
+  return Math.max(0,(base+waste+it.making)*it.qty-it.discount);
 }
-function set(i,k,v){
- items[i][k]=k==="name"||k==="metal"?v:Number(v)||0;
- renderItems();
+function totals(){
+  const subtotal=items.reduce((s,it)=>s+itemAmount(it),0);
+  const gst=subtotal*num("gstRate")/100;
+  return {subtotal,gst,total:subtotal+gst};
 }
 function removeItem(i){items.splice(i,1);renderItems()}
-function itemTotal(it){
- const base=it.weight*it.rate*it.qty;
- return base+(base*it.wastage/100)+(Number(it.making)||0)*it.qty;
+function renderItems(){
+  $("itemList").innerHTML=items.map((it,i)=>`
+    <div class="item">
+      <b>${safe(it.metal)} — ${safe(it.name)}</b><br>
+      Qty: ${it.qty} | Weight: ${it.weight} g | Rate: ${money(it.rate)} / g<br>
+      Wastage: ${it.wastage}% | Making: ${money(it.making)} |
+      Discount: ${money(it.discount)}<br>
+      <b>Amount: ${money(itemAmount(it))}</b>
+      <button class="danger" onclick="removeItem(${i})">Remove</button>
+    </div>`).join("");
+  const t=totals();
+  $("totalBox").textContent="Total: "+money(t.total);
+  previewBill();
 }
-function calculate(){
- const sub=items.reduce((s,it)=>s+itemTotal(it),0);
- const discount=Math.max(0,Number(document.getElementById("discount").value)||0);
- const taxable=Math.max(0,sub-discount);
- const gstRate=Math.max(0,Number(document.getElementById("gst").value)||0);
- const tax=taxable*gstRate/100;
- document.getElementById("subtotal").textContent=sub.toFixed(2);
- document.getElementById("gstamount").textContent=tax.toFixed(2);
- document.getElementById("grand").textContent=(taxable+tax).toFixed(2);
- return {sub,discount,tax,taxable,grand:taxable+tax};
+function currentBill(){
+  return {
+    id:editingId||String(Date.now()),
+    shop:{
+      name:$("shopName").value,address:$("shopAddress").value,
+      phone:$("shopPhone").value,gstin:$("shopGstin").value
+    },
+    customer:$("customer").value,phone:$("phone").value,
+    billNo:$("billNo").value,billDate:$("billDate").value,
+    signature:$("signature").value,
+    gstRate:num("gstRate"),items:JSON.parse(JSON.stringify(items)),
+    totals:totals()
+  };
 }
-function makeInvoice(){
- const t=calculate();
- const date=document.getElementById("billdate").value;
- let rows=items.map(it=>`<tr>
- <td>${esc(it.name||it.metal)} (${esc(it.metal)})</td>
- <td>${it.qty}</td><td>${it.weight}</td><td>₹${it.rate}</td>
- <td>${it.wastage}%</td><td>₹${itemTotal(it).toFixed(2)}</td>
- </tr>`).join("");
- document.getElementById("printarea").innerHTML=`
- <h2>${esc(document.getElementById("shop").value||"Jewellery Shop")}</h2>
- <p class="right">Date: ${esc(date)}</p>
- <p>${esc(document.getElementById("address").value)}<br>
- Phone: ${esc(document.getElementById("phone").value)}<br>
- GSTIN: ${esc(document.getElementById("gstin").value)}</p>
- <hr><h3 style="text-align:center">JEWELLERY INVOICE</h3>
- <p>Customer: ${esc(document.getElementById("customer").value||"—")}</p>
- <table><tr><th>Item</th><th>Qty</th><th>Weight g</th><th>Rate</th><th>Wastage</th><th>Amount</th></tr>${rows}</table>
- <p class="right">Subtotal: ₹${t.sub.toFixed(2)}<br>
- Discount: ₹${t.discount.toFixed(2)}<br>
- GST: ₹${t.tax.toFixed(2)}</p>
- <h3 class="right">Grand Total: ₹${t.grand.toFixed(2)}</h3>
- <br><br><p class="right">Owner's Signature: ______________</p>`;
- document.getElementById("invoice").style.display="block";
+function renderBill(b){
+  const t=b.totals||{subtotal:0,gst:0,total:0};
+  const rows=(b.items||[]).map((it,i)=>`
+    <tr>
+      <td>${i+1}</td><td>${safe(it.metal)} ${safe(it.name)}</td>
+      <td>${it.qty}</td><td>${it.weight} g</td>
+      <td class="right">${money(it.rate)}</td>
+      <td class="right">${money(itemAmount(it))}</td>
+    </tr>`).join("");
+  return `
+    <div class="bill">
+      <h2>${safe(b.shop.name||"Jewellery Shop")}</h2>
+      <div style="text-align:center">
+        ${safe(b.shop.address||"")}<br>
+        ${b.shop.phone?"Phone: "+safe(b.shop.phone):""}<br>
+        ${b.shop.gstin?"GSTIN: "+safe(b.shop.gstin):""}
+      </div>
+      <hr>
+      <p><b>Invoice</b><br>
+      Bill No: ${safe(b.billNo)}<br>Date: ${safe(b.billDate)}<br>
+      Customer: ${safe(b.customer)}<br>
+      Phone: ${safe(b.phone)}</p>
+      <table>
+        <thead><tr><th>No.</th><th>Item</th><th>Qty</th><th>Weight</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="right">Subtotal: ${money(t.subtotal)}<br>
+      GST (${Number(b.gstRate||0)}%): ${money(t.gst)}<br>
+      <b>Total: ${money(t.total)}</b></p>
+      <br><br>
+      <p style="text-align:right">____________________<br>
+      ${safe(b.signature||"Owner's Signature")}</p>
+      <p>Thank you!</p>
+    </div>`;
 }
+function previewBill(){
+  $("billPreview").innerHTML=renderBill(currentBill());
+}
+function getBills(){return JSON.parse(localStorage.getItem("jewelBills")||"[]")}
+function setBills(b){localStorage.setItem("jewelBills",JSON.stringify(b))}
 function saveBill(){
- const t=calculate();
- const bill={id:Date.now(),no:billNo++,customer:document.getElementById("customer").value,
- date:document.getElementById("billdate").value,items:JSON.parse(JSON.stringify(items)),total:t.grand};
- bills.push(bill);
- localStorage.setItem("jewelleryBills",JSON.stringify(bills));
- alert("Bill saved on this device.");
+  if(items.length===0){alert("Add at least one item before saving.");return}
+  const b=currentBill();
+  let bills=getBills();
+  const i=bills.findIndex(x=>x.id===b.id);
+  if(i>=0)bills[i]=b;else bills.unshift(b);
+  setBills(bills);editingId=b.id;
+  alert("Bill saved on this device.");
+  showSaved();
 }
-function showBills(){
- document.getElementById("saved").style.display="block";
- const q=(document.getElementById("search").value||"").toLowerCase();
- document.getElementById("billlist").innerHTML=bills.filter(b=>
- (b.customer||"").toLowerCase().includes(q)||String(b.no).includes(q))
- .map(b=>`<div class="item">Bill ${b.no} — ${esc(b.customer||"Customer")} — ₹${b.total.toFixed(2)}
- <button onclick="loadBill(${b.id})">Open</button></div>`).join("")||"No saved bills found.";
+function showSaved(){
+  const q=$("search").value.toLowerCase();
+  const bills=getBills().filter(b=>
+    String(b.customer||"").toLowerCase().includes(q)||
+    String(b.billNo||"").toLowerCase().includes(q)
+  );
+  $("savedBills").innerHTML=bills.map(b=>`
+    <div class="item">
+      <b>${safe(b.billNo)}</b> — ${safe(b.customer)}<br>
+      ${safe(b.billDate)} | ${money(b.totals?.total)}
+      <button onclick="openBill('${b.id}')">Open</button>
+      <button class="secondary" onclick="printSaved('${b.id}')">Print</button>
+      <button class="danger" onclick="deleteBill('${b.id}')">Delete</button>
+    </div>`).join("")||"No saved bills found.";
 }
-function loadBill(id){
- const b=bills.find(x=>x.id===id);if(!b)return;
- items=JSON.parse(JSON.stringify(b.items));
- document.getElementById("customer").value=b.customer||"";
- document.getElementById("billdate").value=b.date||"";
- renderItems();makeInvoice();
+function openBill(id){
+  const b=getBills().find(x=>x.id===id);if(!b)return;
+  editingId=b.id;items=b.items||[];
+  $("customer").value=b.customer||"";$("phone").value=b.phone||"";
+  $("billNo").value=b.billNo||"";$("billDate").value=b.billDate||today();
+  $("signature").value=b.signature||"";$("gstRate").value=b.gstRate||0;
+  renderItems();window.scrollTo(0,0);
 }
-function esc(s){
- return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function deleteBill(id){
+  if(!confirm("Delete this saved bill?"))return;
+  setBills(getBills().filter(b=>b.id!==id));showSaved();
 }
-addItem();
+function printBill(){
+  previewBill();window.print();
+}
+function printSaved(id){
+  const b=getBills().find(x=>x.id===id);if(!b)return;
+  $("billPreview").innerHTML=renderBill(b);window.print();previewBill();
+}
+function newBill(){
+  items=[];editingId=null;
+  $("customer").value="";$("phone").value="";
+  $("billNo").value=makeBillNo();$("billDate").value=today();
+  $("signature").value="";$("gstRate").value=0;
+  renderItems();
+}
+loadShop();
+newBill();
+showSaved();
 </script>
 </body>
 </html>
